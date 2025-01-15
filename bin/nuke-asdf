@@ -1,0 +1,46 @@
+#!/bin/sh
+#
+# Nuke ASDF
+#
+# This script does best-effort to remove the program from your system.
+#
+# This script is a work-in-progress. Constructive feedback is welcome.
+#
+set -euf
+
+for name in \
+    asdf \
+    asdf-vm
+do
+
+    if command -v apt-get >/dev/null 2>&1; then
+        apt-get purge "$name"
+    fi
+
+    if command -v brew >/dev/null 2>&1; then
+        cellar=$(brew --cellar)
+        for formula in "$name" $(brew search "$name" | sed 's/\w+/\n/g' | grep "^$name@"); do
+            brew uninstall --force "$formula"
+            rm -rf "${cellar:-/opt/homebrew/Cellar}/$formula"
+        done
+    fi
+
+    if command -v choco >/dev/null 2>&1; then
+        choco uninstall "$name"
+    fi
+
+    if command -v yum >/dev/null 2>&1; then
+        yum remove "$name"
+    fi
+
+    rm -rf "/usr/local/bin/$name"
+    rm -rf "/usr/local/include/$name"
+    rm -rf "/usr/local/share/man/man1/$name"
+    rm -rf "/usr/local/lib/dtrace/$name"
+    rm -rf "/opt/local/bin/$name"
+    rm -rf "/opt/local/include/$name"
+    rm -rf "/opt/local/lib/$name"
+    rm -rf "/usr/local/share/doc/$name"
+    rm -rf "/usr/local/share/systemtap/tapset/$name"
+
+done
